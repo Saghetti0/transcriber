@@ -1,0 +1,5 @@
+{
+  "redis": "redis://localhost/",
+  "model": "medium",
+  "device": "cuda"
+}

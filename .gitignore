@@ -1,0 +1,4 @@
+bot/node_modules/
+bot/config.json
+worker/config.json
+worker/env/
