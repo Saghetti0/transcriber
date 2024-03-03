@@ -19,11 +19,8 @@ class Transcriber:
         self.model = whisper.load_model(model, device=device)
 
     def process(self, file_path):
-        try:
-            result = self.model.transcribe(file_path)
-            return (True, result[0])
-        except Exception as e:
-            return (False, str(e))
+        result = self.model.transcribe(file_path)
+        return (True, result["text"])
 
     def close(self):
         pass
@@ -77,7 +74,7 @@ def transcribe(self, url):
         ok, data = tr_instance.process(f"temp/{file_id}.wav")
 
         if not ok:
-            raise Exception("whisper error in " + data); 
+            raise Exception("whisper error in " + data)
 
         return data
     finally:
