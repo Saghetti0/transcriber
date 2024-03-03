@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { Client, DiscordAPIError, Events, GatewayIntentBits, Message, PermissionFlagsBits } from "discord.js";
 import configJson from "./config.json";
 import { createClient } from "celery-node";
 import process from "process";
@@ -76,15 +76,48 @@ client.on(Events.MessageCreate, async (e) => {
     await redis.expire(`transcribe.${e.id}`, 60 * 60 * 12);
   
     console.log("Transcribing", e.id);
-  
-    const replyMessage = await e.reply({
-      content: ":writing_hand: Transcribing...",
-      failIfNotExists: true,
-      allowedMentions: {
-        repliedUser: false
+
+    const messageLink = `https://discord.com/channels/${e.guildId}/${e.channelId}/${e.id}`;
+
+    let canReply = true;
+
+    // this doesn't work??
+    /*
+    if (!e.channel.isDMBased() && (e.member !== null)) {
+      if (e.channel.permissionsFor(e.member).has(PermissionFlagsBits.ReadMessageHistory)) {
+        e.member.permissionsIn
+        canReply = true;
       }
-    });
+    }
+    */
+
+    let replyMessage: Message;
+
+    try {
+      replyMessage = await e.reply({
+        content: ":writing_hand: Transcribing...",
+        failIfNotExists: true,
+        allowedMentions: {
+          repliedUser: false
+        }
+      });
+    } catch (err) {
+      // this is janky and horrible and i'm sad
+      // unfortunately djs is broken with permissions calc (i think)
+      // so this is the easiest way i can think of to figure out if we can reply
+      // i'll make it better if cloudflare bans are ever a problem...
+      if (typeof err == "object" && err !== null && "code" in err && typeof err.code == "number") {
+        canReply = false;
+        replyMessage = await e.channel.send({
+          content: `${messageLink} :writing_hand: Transcribing...`,
+        });
+      } else {
+        throw err;
+      }
+    }
   
+    const prefix = canReply ? "" : `${messageLink}\n`;
+
     try {
       transcribeTask.applyAsync([url]).get().then(async value => {
         await redis.hset(`transcribe.${e.id}`, {
@@ -94,8 +127,9 @@ client.on(Events.MessageCreate, async (e) => {
   
         console.log("Finished transcription for", e.id);
         // TODO: handle messages longer than 2000 characters
+
         await replyMessage.edit({
-          content: "```\n" + value + "\n```\n",
+          content: prefix + "```\n" + value + "\n```\n",
           allowedMentions: {
             repliedUser: false
           }
@@ -106,7 +140,7 @@ client.on(Events.MessageCreate, async (e) => {
         });
         console.log("Failed transcription for", e.id);
         await replyMessage.edit({
-          content: ":warning: Error transcribing: `" + err + "`",
+          content: prefix + ":warning: Error transcribing: `" + err + "`",
           allowedMentions: {
             repliedUser: false
           }
@@ -117,7 +151,7 @@ client.on(Events.MessageCreate, async (e) => {
       await redis.hset(`transcribe.${e.id}`, {
         state: "top_err"
       });
-      replyMessage.edit(":warning: Error transcribing: (tl) `" + err + "`");
+      replyMessage.edit(prefix + ":warning: Error transcribing: (tl) `" + err + "`");
     }
   } catch (e) {
     console.log("Top level execption", e);
