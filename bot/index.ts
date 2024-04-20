@@ -127,7 +127,7 @@ client.on(Events.MessageCreate, async (e) => {
   
         console.log("Finished transcription for", e.id);
 
-        if (value.length < 1800)
+        if (value.length < 3800)
           return await replyMessage.edit({
             content: prefix + "```\n" + value + "\n```\n",
             allowedMentions: {
@@ -136,7 +136,7 @@ client.on(Events.MessageCreate, async (e) => {
           });
 
         await replyMessage.edit({
-          content: prefix + "Transcription attached as attachment",
+          content: prefix + "Transcription attached as file",
           files: [{
             attachment: Buffer.from(value, "utf-8"),
             name: "transcription.txt"
