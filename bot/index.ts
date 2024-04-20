@@ -24,8 +24,9 @@ const transcribeTask = celeryClient.createTask("transcriber.transcribe");
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMembers,
   GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.MessageContent
+  GatewayIntentBits.MessageContent,
 ] });
 
 client.on(Events.ShardError, error => {
@@ -78,22 +79,19 @@ client.on(Events.MessageCreate, async (e) => {
     console.log("Transcribing", e.id);
 
     const messageLink = `https://discord.com/channels/${e.guildId}/${e.channelId}/${e.id}`;
+    let canReply = false;
+    const myself = e.guild?.members.me;
 
-    let canReply = true;
-
-    // this doesn't work??
-    /*
-    if (!e.channel.isDMBased() && (e.member !== null)) {
-      if (e.channel.permissionsFor(e.member).has(PermissionFlagsBits.ReadMessageHistory)) {
-        e.member.permissionsIn
+    if (!e.channel.isDMBased() && myself) {
+      if (e.channel.permissionsFor(myself).has(PermissionFlagsBits.ReadMessageHistory)) {
         canReply = true;
       }
     }
-    */
 
+    const prefix = canReply ? "" : `${messageLink}\n`;
     let replyMessage: Message;
 
-    try {
+    if (canReply) {
       replyMessage = await e.reply({
         content: ":writing_hand: Transcribing...",
         failIfNotExists: true,
@@ -101,23 +99,12 @@ client.on(Events.MessageCreate, async (e) => {
           repliedUser: false
         }
       });
-    } catch (err) {
-      // this is janky and horrible and i'm sad
-      // unfortunately djs is broken with permissions calc (i think)
-      // so this is the easiest way i can think of to figure out if we can reply
-      // i'll make it better if cloudflare bans are ever a problem...
-      if (typeof err == "object" && err !== null && "code" in err && typeof err.code == "number") {
-        canReply = false;
-        replyMessage = await e.channel.send({
-          content: `${messageLink} :writing_hand: Transcribing...`,
-        });
-      } else {
-        throw err;
-      }
+    } else {
+      replyMessage = await e.channel.send({
+        content: `${messageLink} :writing_hand: Transcribing...`,
+      });
     }
-  
-    const prefix = canReply ? "" : `${messageLink}\n`;
-
+ 
     try {
       transcribeTask.applyAsync([url]).get().then(async value => {
         await redis.hset(`transcribe.${e.id}`, {
