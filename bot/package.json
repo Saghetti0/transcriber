@@ -12,5 +12,8 @@
     "celery-node": "^0.5.9",
     "discord.js": "^14.9.0",
     "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.26"
   }
 }

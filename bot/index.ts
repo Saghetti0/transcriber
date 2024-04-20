@@ -126,10 +126,21 @@ client.on(Events.MessageCreate, async (e) => {
         });
   
         console.log("Finished transcription for", e.id);
-        // TODO: handle messages longer than 2000 characters
+
+        if (value.length < 3800)
+          return await replyMessage.edit({
+            content: prefix + "```\n" + value + "\n```\n",
+            allowedMentions: {
+              repliedUser: false
+            }
+          });
 
         await replyMessage.edit({
-          content: prefix + "```\n" + value + "\n```\n",
+          content: prefix + "Transcription attached as file",
+          files: [{
+            attachment: Buffer.from(value, "utf-8"),
+            name: "transcription.txt"
+          }],
           allowedMentions: {
             repliedUser: false
           }
