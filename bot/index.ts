@@ -40,7 +40,7 @@ const client = new Client({ intents: [
 ] });
 
 client.on(Events.ShardError, error => {
-	console.error('A websocket connection encountered an error:', error);
+  console.error('A websocket connection encountered an error:', error);
 });
 
 client.on(Events.Error, error => {
@@ -48,12 +48,10 @@ client.on(Events.Error, error => {
 })
 
 client.once(Events.ClientReady, c => {
-	console.log(`Ready! Logged in as ${c.user.tag}`);
+  console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
 async function handleCommandAutotranscribe(e: ChatInputCommandInteraction) {
-  console.log("got chatinput", e);
-
   const subcommand = e.options.getSubcommand(true);
 
   switch (subcommand) {
