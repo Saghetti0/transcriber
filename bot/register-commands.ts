@@ -24,6 +24,13 @@ const commandDefs = [
     ]
   },
   {
+    "name": "howto",
+    "type": 1,
+    "integration_types": [0, 1],
+    "contexts": [0, 1, 2],
+    "description": "Send information about how to use Transcriber"
+  },
+  {
     "name": "Transcribe",
     "type": 3,
     "integration_types": [0, 1],

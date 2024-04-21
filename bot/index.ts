@@ -85,6 +85,24 @@ async function handleCommandAutotranscribe(e: ChatInputCommandInteraction) {
   }
 }
 
+const howtoInvite =
+`Want to use Transcriber for yourself? Follow these instructions:
+1. Open <@1096877566595452978>'s profile
+2. Click "Add App"
+3. Choose "Add to Server" to add Transcriber to a server, or "Try it Now" to use Transcriber anywhere on Discord.
+
+If Transcriber is added to your user account, you can go into the context menu for a message and choose "Apps > Transcribe" to transcribe it. This works on *any* message in any server, DM, or group chat, without needing to add the bot.
+If it's added to a server, it will automatically transcribe any voice messages it can see. You can also use the context menu to transcribe messages.
+
+Need help? Join our support server! https://discord.gg/EBEVZDZzPC`;
+
+async function handleCommandHowto(e: ChatInputCommandInteraction) {
+  await e.reply({
+    content: howtoInvite,
+    ephemeral: false,
+  });
+}
+
 async function handleContextMenuTranscribe(e: MessageContextMenuCommandInteraction) {
   const message = e.targetMessage;
 
@@ -248,6 +266,11 @@ client.on(Events.InteractionCreate, e => {
   if (e.isChatInputCommand()) {
     if (e.commandName == "autotranscribe") {
       handleCommandAutotranscribe(e);
+      return;
+    }
+
+    if (e.commandName == "howto") {
+      handleCommandHowto(e);
       return;
     }
   }
