@@ -127,7 +127,7 @@ async function handleContextMenuTranscribe(e: MessageContextMenuCommandInteracti
 
     console.log("Finished transcription for", message.id);
 
-    if (transcribeResult.length < 3800) {
+    if (transcribeResult.length < 1800) {
       await replyMessage.edit({
         content: "```\n" + transcribeResult + "\n```\n",
         allowedMentions: {
@@ -198,7 +198,7 @@ async function handleAutoTranscribe(message: Message<true>) {
 
     console.log("Finished transcription for", message.id);
 
-    if (transcribeResult.length < 3800) {
+    if (transcribeResult.length < 1800) {
       await replyMessage.edit({
         content: prefix + "```\n" + transcribeResult + "\n```\n",
         allowedMentions: {
