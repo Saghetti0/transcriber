@@ -8,6 +8,7 @@ import uuid
 import requests
 import os
 import whisper
+import subprocess
 
 if not os.path.exists("temp"):
     os.mkdir("temp")
@@ -24,6 +25,15 @@ class Transcriber:
 
     def close(self):
         pass
+
+def get_audio_duration(file_path):
+    cmd = f'ffprobe -i {file_path} -show_entries format=duration -v quiet -of csv="p=0"'
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise ChildProcessError(f"ffprobe exited with {result.returncode}")
+
+    return float(result.stdout.strip())
 
 asynpool.PROC_ALIVE_TIMEOUT = 60.0
 
@@ -65,6 +75,9 @@ def transcribe(self, url):
             fh.write(resp.content)
         
         self.update_state(state=states.STARTED, meta={"action": "ffmpeg_decompress"})
+
+        if get_audio_duration(f"temp/{file_id}.ogg") > 300:
+            raise Exception("audio is too long (5min max)")
 
         ffmpeg_ret = os.system(f"ffmpeg -i temp/{file_id}.ogg -ac 1 -ar 16000 -c:a pcm_s16le temp/{file_id}.wav")
 
