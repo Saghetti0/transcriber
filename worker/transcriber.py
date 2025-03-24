@@ -76,8 +76,9 @@ def transcribe(self, url):
         
         self.update_state(state=states.STARTED, meta={"action": "ffmpeg_decompress"})
 
-        if get_audio_duration(f"temp/{file_id}.ogg") > 300:
-            raise Exception("audio is too long (5min max)")
+        # 10 minute max duration
+        if get_audio_duration(f"temp/{file_id}.ogg") > 600:
+            raise Exception("audio is too long (10min max)")
 
         ffmpeg_ret = os.system(f"ffmpeg -i temp/{file_id}.ogg -ac 1 -ar 16000 -c:a pcm_s16le temp/{file_id}.wav")
 
